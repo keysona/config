@@ -1,0 +1,3 @@
+#/bin/bash
+nohup python3 /home/key/project/python/network-connect.py >> /var/log/schoole-network.log 2>&1 &
+sudo sslocal -d start -c /home/key/.shadow-digital-ocean-debain7-.json

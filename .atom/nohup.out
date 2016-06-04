@@ -1,5 +1,1 @@
-App load time: 472ms
-(electron) app.getDataPath is deprecated. Use app.getPath instead.
-
-(atom:14201): GConf-WARNING **: Got Disconnected from DBus.
-
+App load time: 481ms
