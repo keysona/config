@@ -1,0 +1,558 @@
+(function() {
+  var dispatch, getVimState, settings, _ref;
+
+  _ref = require('./spec-helper'), getVimState = _ref.getVimState, dispatch = _ref.dispatch;
+
+  settings = require('../lib/settings');
+
+  describe("Operator Increase", function() {
+    var editor, editorElement, ensure, keystroke, set, vimState, _ref1;
+    _ref1 = [], set = _ref1[0], ensure = _ref1[1], keystroke = _ref1[2], editor = _ref1[3], editorElement = _ref1[4], vimState = _ref1[5];
+    beforeEach(function() {
+      return getVimState(function(state, vim) {
+        vimState = state;
+        editor = vimState.editor, editorElement = vimState.editorElement;
+        return set = vim.set, ensure = vim.ensure, keystroke = vim.keystroke, vim;
+      });
+    });
+    afterEach(function() {
+      return vimState.resetNormalMode();
+    });
+    describe("the ctrl-a/ctrl-x keybindings", function() {
+      beforeEach(function() {
+        return set({
+          text: '123\nab45\ncd-67ef\nab-5\na-bcdef',
+          cursorBuffer: [[0, 0], [1, 0], [2, 0], [3, 3], [4, 0]]
+        });
+      });
+      describe("increasing numbers", function() {
+        describe("normal-mode", function() {
+          it("increases the next number", function() {
+            return ensure({
+              ctrl: 'a'
+            }, {
+              text: '124\nab46\ncd-66ef\nab-4\na-bcdef',
+              cursorBuffer: [[0, 2], [1, 3], [2, 4], [3, 3], [4, 0]]
+            });
+          });
+          it("repeats with .", function() {
+            return ensure([
+              {
+                ctrl: 'a'
+              }, '.'
+            ], {
+              text: '125\nab47\ncd-65ef\nab-3\na-bcdef',
+              cursorBuffer: [[0, 2], [1, 3], [2, 4], [3, 3], [4, 0]]
+            });
+          });
+          it("can have a count", function() {
+            return ensure([
+              '5', {
+                ctrl: 'a'
+              }
+            ], {
+              cursorBuffer: [[0, 2], [1, 3], [2, 4], [3, 2], [4, 0]],
+              text: '128\nab50\ncd-62ef\nab0\na-bcdef'
+            });
+          });
+          it("can make a negative number positive, change number of digits", function() {
+            return ensure([
+              '99', {
+                ctrl: 'a'
+              }
+            ], {
+              text: '222\nab144\ncd32ef\nab94\na-bcdef',
+              cursorBuffer: [[0, 2], [1, 4], [2, 3], [3, 3], [4, 0]]
+            });
+          });
+          it("does nothing when cursor is after the number", function() {
+            set({
+              cursorBuffer: [2, 5]
+            });
+            return ensure({
+              ctrl: 'a'
+            }, {
+              text: '123\nab45\ncd-67ef\nab-5\na-bcdef',
+              cursorBuffer: [[2, 5]]
+            });
+          });
+          it("does nothing on an empty line", function() {
+            set({
+              text: '\n',
+              cursorBuffer: [[0, 0], [1, 0]]
+            });
+            return ensure({
+              ctrl: 'a'
+            }, {
+              text: '\n',
+              cursorBuffer: [[0, 0], [1, 0]]
+            });
+          });
+          return it("honours the vim-mode-plus.numberRegex setting", function() {
+            set({
+              text: '123\nab45\ncd -67ef\nab-5\na-bcdef',
+              cursorBuffer: [[0, 0], [1, 0], [2, 0], [3, 3], [4, 0]]
+            });
+            settings.set('numberRegex', '(?:\\B-)?[0-9]+');
+            return ensure({
+              ctrl: 'a'
+            }, {
+              cursorBuffer: [[0, 2], [1, 3], [2, 5], [3, 3], [4, 0]],
+              text: '124\nab46\ncd -66ef\nab-6\na-bcdef'
+            });
+          });
+        });
+        return describe("visual-mode", function() {
+          beforeEach(function() {
+            return set({
+              text: "1 2 3\n1 2 3\n1 2 3\n1 2 3"
+            });
+          });
+          it("increase number in characterwise selected range", function() {
+            set({
+              cursor: [0, 2]
+            });
+            return ensure([
+              "v2j", {
+                ctrl: 'a'
+              }
+            ], {
+              text: "1 3 4\n2 3 4\n2 3 3\n1 2 3",
+              selectedText: "3 4\n2 3 4\n2 3",
+              cursor: [2, 3]
+            });
+          });
+          it("increase number in characterwise selected range when multiple cursors", function() {
+            set({
+              cursor: [0, 2],
+              addCursor: [2, 2]
+            });
+            return ensure([
+              "v10", {
+                ctrl: 'a'
+              }
+            ], {
+              text: "1 12 3\n1 2 3\n1 12 3\n1 2 3",
+              selectedTextOrdered: ["12", "12"],
+              selectedBufferRangeOrdered: [[[0, 2], [0, 4]], [[2, 2], [2, 4]]]
+            });
+          });
+          it("increase number in linewise selected range", function() {
+            set({
+              cursor: [0, 0]
+            });
+            return ensure([
+              "V2j", {
+                ctrl: 'a'
+              }
+            ], {
+              text: "2 3 4\n2 3 4\n2 3 4\n1 2 3",
+              selectedText: "2 3 4\n2 3 4\n2 3 4\n",
+              cursor: [3, 0]
+            });
+          });
+          return it("increase number in blockwise selected range", function() {
+            set({
+              cursor: [1, 2]
+            });
+            return ensure([
+              {
+                ctrl: 'v'
+              }, '2l2j', {
+                ctrl: 'a'
+              }
+            ], {
+              text: "1 2 3\n1 3 4\n1 3 4\n1 3 4",
+              selectedTextOrdered: ["3 4", "3 4", "3 4"],
+              selectedBufferRangeOrdered: [[[1, 2], [1, 5]], [[2, 2], [2, 5]], [[3, 2], [3, 5]]]
+            });
+          });
+        });
+      });
+      return describe("decreasing numbers", function() {
+        describe("normal-mode", function() {
+          it("decreases the next number", function() {
+            return ensure({
+              ctrl: 'x'
+            }, {
+              text: '122\nab44\ncd-68ef\nab-6\na-bcdef',
+              cursorBuffer: [[0, 2], [1, 3], [2, 4], [3, 3], [4, 0]]
+            });
+          });
+          it("repeats with .", function() {
+            return ensure([
+              {
+                ctrl: 'x'
+              }, '.'
+            ], {
+              text: '121\nab43\ncd-69ef\nab-7\na-bcdef',
+              cursorBuffer: [[0, 2], [1, 3], [2, 4], [3, 3], [4, 0]]
+            });
+          });
+          it("can have a count", function() {
+            return ensure([
+              '5', {
+                ctrl: 'x'
+              }
+            ], {
+              text: '118\nab40\ncd-72ef\nab-10\na-bcdef',
+              cursorBuffer: [[0, 2], [1, 3], [2, 4], [3, 4], [4, 0]]
+            });
+          });
+          it("can make a positive number negative, change number of digits", function() {
+            return ensure([
+              '99', {
+                ctrl: 'x'
+              }
+            ], {
+              text: '24\nab-54\ncd-166ef\nab-104\na-bcdef',
+              cursorBuffer: [[0, 1], [1, 4], [2, 5], [3, 5], [4, 0]]
+            });
+          });
+          it("does nothing when cursor is after the number", function() {
+            set({
+              cursorBuffer: [2, 5]
+            });
+            return ensure({
+              ctrl: 'x'
+            }, {
+              text: '123\nab45\ncd-67ef\nab-5\na-bcdef',
+              cursorBuffer: [[2, 5]]
+            });
+          });
+          it("does nothing on an empty line", function() {
+            set({
+              text: '\n',
+              cursorBuffer: [[0, 0], [1, 0]]
+            });
+            return ensure({
+              ctrl: 'x'
+            }, {
+              text: '\n',
+              cursorBuffer: [[0, 0], [1, 0]]
+            });
+          });
+          return it("honours the vim-mode-plus.numberRegex setting", function() {
+            set({
+              text: '123\nab45\ncd -67ef\nab-5\na-bcdef',
+              cursorBuffer: [[0, 0], [1, 0], [2, 0], [3, 3], [4, 0]]
+            });
+            settings.set('numberRegex', '(?:\\B-)?[0-9]+');
+            return ensure({
+              ctrl: 'x'
+            }, {
+              text: '122\nab44\ncd -68ef\nab-4\na-bcdef',
+              cursorBuffer: [[0, 2], [1, 3], [2, 5], [3, 3], [4, 0]]
+            });
+          });
+        });
+        return describe("visual-mode", function() {
+          beforeEach(function() {
+            return set({
+              text: "1 2 3\n1 2 3\n1 2 3\n1 2 3"
+            });
+          });
+          it("decrease number in characterwise selected range", function() {
+            set({
+              cursor: [0, 2]
+            });
+            return ensure([
+              "v2j", {
+                ctrl: 'x'
+              }
+            ], {
+              text: "1 1 2\n0 1 2\n0 1 3\n1 2 3",
+              selectedText: "1 2\n0 1 2\n0 1",
+              cursor: [2, 3]
+            });
+          });
+          it("decrease number in characterwise selected range when multiple cursors", function() {
+            set({
+              cursor: [0, 2],
+              addCursor: [2, 2]
+            });
+            return ensure([
+              "v5", {
+                ctrl: 'x'
+              }
+            ], {
+              text: "1 -3 3\n1 2 3\n1 -3 3\n1 2 3",
+              selectedTextOrdered: ["-3", "-3"],
+              selectedBufferRangeOrdered: [[[0, 2], [0, 4]], [[2, 2], [2, 4]]]
+            });
+          });
+          it("decrease number in linewise selected range", function() {
+            set({
+              cursor: [0, 0]
+            });
+            return ensure([
+              "V2j", {
+                ctrl: 'x'
+              }
+            ], {
+              text: "0 1 2\n0 1 2\n0 1 2\n1 2 3",
+              selectedText: "0 1 2\n0 1 2\n0 1 2\n",
+              cursor: [3, 0]
+            });
+          });
+          return it("decrease number in blockwise selected rage", function() {
+            set({
+              cursor: [1, 2]
+            });
+            return ensure([
+              {
+                ctrl: 'v'
+              }, '2l2j', {
+                ctrl: 'x'
+              }
+            ], {
+              text: "1 2 3\n1 1 2\n1 1 2\n1 1 2",
+              selectedTextOrdered: ["1 2", "1 2", "1 2"],
+              selectedBufferRangeOrdered: [[[1, 2], [1, 5]], [[2, 2], [2, 5]], [[3, 2], [3, 5]]]
+            });
+          });
+        });
+      });
+    });
+    return describe("the 'g ctrl-a', 'g ctrl-x' increment-number, decrement-number", function() {
+      describe("increment", function() {
+        beforeEach(function() {
+          return set({
+            text: "1 10 0\n0 7 0\n0 0 3",
+            cursor: [0, 0]
+          });
+        });
+        it("use first number as base number case-1", function() {
+          set({
+            text: "1 1 1",
+            cursor: [0, 0]
+          });
+          return ensure([
+            'g', {
+              ctrl: 'a'
+            }, '$'
+          ], {
+            text: "1 2 3",
+            mode: 'normal',
+            cursor: [0, 0]
+          });
+        });
+        it("use first number as base number case-2", function() {
+          set({
+            text: "99 1 1",
+            cursor: [0, 0]
+          });
+          return ensure([
+            'g', {
+              ctrl: 'a'
+            }, '$'
+          ], {
+            text: "99 100 101",
+            mode: 'normal',
+            cursor: [0, 0]
+          });
+        });
+        it("can take count, and used as step to each increment", function() {
+          set({
+            text: "5 0 0",
+            cursor: [0, 0]
+          });
+          return ensure([
+            '5g', {
+              ctrl: 'a'
+            }, '$'
+          ], {
+            text: "5 10 15",
+            mode: 'normal',
+            cursor: [0, 0]
+          });
+        });
+        it("only increment number in target range", function() {
+          set({
+            cursor: [1, 2]
+          });
+          return ensure([
+            'g', {
+              ctrl: 'a'
+            }, 'j'
+          ], {
+            text: "1 10 0\n0 1 2\n3 4 5",
+            mode: 'normal'
+          });
+        });
+        it("works in characterwise visual-mode", function() {
+          set({
+            cursor: [1, 2]
+          });
+          return ensure([
+            'vjg', {
+              ctrl: 'a'
+            }
+          ], {
+            text: "1 10 0\n0 7 8\n9 10 3",
+            mode: 'normal'
+          });
+        });
+        it("works in blockwise visual-mode", function() {
+          set({
+            cursor: [0, 2]
+          });
+          return ensure([
+            {
+              ctrl: 'v'
+            }, '2j$g', {
+              ctrl: 'a'
+            }
+          ], {
+            text: "1 10 11\n0 12 13\n0 14 15",
+            mode: 'normal'
+          });
+        });
+        return describe("point when finished and repeatable", function() {
+          beforeEach(function() {
+            set({
+              text: "1 0 0 0 0",
+              cursor: [0, 0]
+            });
+            return ensure("v$", {
+              selectedText: '1 0 0 0 0'
+            });
+          });
+          it("put cursor on start position when finished and repeatable (case: selection is not reversed)", function() {
+            ensure({
+              selectionIsReversed: false
+            });
+            ensure([
+              'g', {
+                ctrl: 'a'
+              }
+            ], {
+              text: "1 2 3 4 5",
+              cursor: [0, 0],
+              mode: 'normal'
+            });
+            return ensure('.', {
+              text: "6 7 8 9 10",
+              cursor: [0, 0]
+            });
+          });
+          return it("put cursor on start position when finished and repeatable (case: selection is reversed)", function() {
+            ensure('o', {
+              selectionIsReversed: true
+            });
+            ensure([
+              'g', {
+                ctrl: 'a'
+              }
+            ], {
+              text: "1 2 3 4 5",
+              cursor: [0, 0],
+              mode: 'normal'
+            });
+            return ensure('.', {
+              text: "6 7 8 9 10",
+              cursor: [0, 0]
+            });
+          });
+        });
+      });
+      return describe("decrement", function() {
+        beforeEach(function() {
+          return set({
+            text: "14 23 13\n10 20 13\n13 13 16",
+            cursor: [0, 0]
+          });
+        });
+        it("use first number as base number case-1", function() {
+          set({
+            text: "10 1 1"
+          });
+          return ensure([
+            'g', {
+              ctrl: 'x'
+            }, '$'
+          ], {
+            text: "10 9 8",
+            mode: 'normal',
+            cursor: [0, 0]
+          });
+        });
+        it("use first number as base number case-2", function() {
+          set({
+            text: "99 1 1"
+          });
+          return ensure([
+            'g', {
+              ctrl: 'x'
+            }, '$'
+          ], {
+            text: "99 98 97",
+            mode: 'normal',
+            cursor: [0, 0]
+          });
+        });
+        it("can take count, and used as step to each increment", function() {
+          set({
+            text: "5 0 0",
+            cursor: [0, 0]
+          });
+          return ensure([
+            '5g', {
+              ctrl: 'x'
+            }, '$'
+          ], {
+            text: "5 0 -5",
+            mode: 'normal',
+            cursor: [0, 0]
+          });
+        });
+        it("only decrement number in target range", function() {
+          set({
+            cursor: [1, 3]
+          });
+          return ensure([
+            'g', {
+              ctrl: 'x'
+            }, 'j'
+          ], {
+            text: "14 23 13\n10 9 8\n7 6 5",
+            mode: 'normal'
+          });
+        });
+        it("works in characterwise visual-mode", function() {
+          set({
+            cursor: [1, 3]
+          });
+          return ensure([
+            'vjlg', {
+              ctrl: 'x'
+            }
+          ], {
+            text: "14 23 13\n10 20 19\n18 17 16",
+            mode: 'normal'
+          });
+        });
+        return it("works in blockwise visual-mode", function() {
+          set({
+            cursor: [0, 3]
+          });
+          return ensure([
+            {
+              ctrl: 'v'
+            }, '2jlg', {
+              ctrl: 'x'
+            }
+          ], {
+            text: "14 23 13\n10 22 13\n13 21 16",
+            mode: 'normal'
+          });
+        });
+      });
+    });
+  });
+
+}).call(this);
+
+//# sourceMappingURL=data:application/json;base64,ewogICJ2ZXJzaW9uIjogMywKICAiZmlsZSI6ICIiLAogICJzb3VyY2VSb290IjogIiIsCiAgInNvdXJjZXMiOiBbCiAgICAiL2hvbWUva2V5Ly5hdG9tL3BhY2thZ2VzL3ZpbS1tb2RlLXBsdXMvc3BlYy9vcGVyYXRvci1pbmNyZWFzZS1zcGVjLmNvZmZlZSIKICBdLAogICJuYW1lcyI6IFtdLAogICJtYXBwaW5ncyI6ICJBQUFBO0FBQUEsTUFBQSxxQ0FBQTs7QUFBQSxFQUFBLE9BQTBCLE9BQUEsQ0FBUSxlQUFSLENBQTFCLEVBQUMsbUJBQUEsV0FBRCxFQUFjLGdCQUFBLFFBQWQsQ0FBQTs7QUFBQSxFQUNBLFFBQUEsR0FBVyxPQUFBLENBQVEsaUJBQVIsQ0FEWCxDQUFBOztBQUFBLEVBR0EsUUFBQSxDQUFTLG1CQUFULEVBQThCLFNBQUEsR0FBQTtBQUM1QixRQUFBLDhEQUFBO0FBQUEsSUFBQSxRQUE0RCxFQUE1RCxFQUFDLGNBQUQsRUFBTSxpQkFBTixFQUFjLG9CQUFkLEVBQXlCLGlCQUF6QixFQUFpQyx3QkFBakMsRUFBZ0QsbUJBQWhELENBQUE7QUFBQSxJQUVBLFVBQUEsQ0FBVyxTQUFBLEdBQUE7YUFDVCxXQUFBLENBQVksU0FBQyxLQUFELEVBQVEsR0FBUixHQUFBO0FBQ1YsUUFBQSxRQUFBLEdBQVcsS0FBWCxDQUFBO0FBQUEsUUFDQyxrQkFBQSxNQUFELEVBQVMseUJBQUEsYUFEVCxDQUFBO2VBRUMsVUFBQSxHQUFELEVBQU0sYUFBQSxNQUFOLEVBQWMsZ0JBQUEsU0FBZCxFQUEyQixJQUhqQjtNQUFBLENBQVosRUFEUztJQUFBLENBQVgsQ0FGQSxDQUFBO0FBQUEsSUFRQSxTQUFBLENBQVUsU0FBQSxHQUFBO2FBQ1IsUUFBUSxDQUFDLGVBQVQsQ0FBQSxFQURRO0lBQUEsQ0FBVixDQVJBLENBQUE7QUFBQSxJQVdBLFFBQUEsQ0FBUywrQkFBVCxFQUEwQyxTQUFBLEdBQUE7QUFDeEMsTUFBQSxVQUFBLENBQVcsU0FBQSxHQUFBO2VBQ1QsR0FBQSxDQUNFO0FBQUEsVUFBQSxJQUFB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
+
+//# sourceURL=/home/key/.atom/packages/vim-mode-plus/spec/operator-increase-spec.coffee

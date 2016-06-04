@@ -1,0 +1,92 @@
+"use babel";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.activate = activate;
+exports.deactivate = deactivate;
+exports.deserialize = deserialize;
+var path = null;
+var PdfEditorView = null;
+
+var config = {
+  reverseSyncBehaviour: {
+    type: "string",
+    "enum": ['Disabled', 'Click', 'Double click'],
+    'default': 'Click',
+    title: "SyncTeX Reverse sync behaviour",
+    description: "Specify the action on the PDF generated with the `--synctex=1` option that takes you to the source."
+  },
+  syncTeXPath: {
+    type: "string",
+    'default': "",
+    title: "Path to synctex binary",
+    description: "If not specified, look for `synctex` in `PATH`"
+  },
+  fitToWidthOnOpen: {
+    type: "boolean",
+    'default': false,
+    title: "Fit to width on open",
+    description: "When opening a document, fit it to the pane width"
+  }
+};
+
+exports.config = config;
+
+function activate(state) {
+  this.subscription = atom.workspace.addOpener(openUri);
+  atom.packages.onDidActivateInitialPackages(createPdfStatusView);
+}
+
+function deactivate() {
+  this.subscription.dispose();
+}
+
+// Files with these extensions will be opened as PDFs
+var pdfExtensions = new Set(['.pdf']);
+
+function openUri(uriToOpen) {
+  if (path === null) {
+    path = require('path');
+  }
+
+  var uriExtension = path.extname(uriToOpen).toLowerCase();
+  if (pdfExtensions.has(uriExtension)) {
+    if (PdfEditorView === null) {
+      PdfEditorView = require('./pdf-editor-view');
+    }
+    return new PdfEditorView(uriToOpen);
+  }
+}
+
+function createPdfStatusView() {
+  var PdfStatusBarView = require('./pdf-status-bar-view');
+  new PdfStatusBarView();
+  var PdfGoToPageView = require('./pdf-goto-page-view');
+  new PdfGoToPageView();
+}
+
+function deserialize(_ref) {
+  var filePath = _ref.filePath;
+  var scale = _ref.scale;
+  var scrollTop = _ref.scrollTop;
+  var scrollLeft = _ref.scrollLeft;
+
+  if (require('fs-plus').isFileSync(filePath)) {
+    if (PdfEditorView === null) {
+      PdfEditorView = require('./pdf-editor-view');
+    }
+    return new PdfEditorView(filePath, scale, scrollTop, scrollLeft);
+  } else {
+    console.warn("Could not deserialize PDF editor for path '#{filePath}' because that file no longer exists");
+  }
+}
+
+if (parseFloat(atom.getVersion()) < 1.7) {
+  atom.deserializers.add({
+    "name": "PdfEditorDeserializer",
+    "deserialize": deserialize
+  });
+}
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi9ob21lL2tleS8uYXRvbS9wYWNrYWdlcy9wZGYtdmlldy9saWIvcGRmLWVkaXRvci5qcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQSxXQUFXLENBQUM7Ozs7Ozs7O0FBRVosSUFBSSxJQUFJLEdBQUcsSUFBSSxDQUFDO0FBQ2hCLElBQUksYUFBYSxHQUFHLElBQUksQ0FBQzs7QUFFbEIsSUFBTSxNQUFNLEdBQUc7QUFDcEIsc0JBQW9CLEVBQUU7QUFDcEIsUUFBSSxFQUFFLFFBQVE7QUFDZCxZQUFNLENBQUMsVUFBVSxFQUFFLE9BQU8sRUFBRSxjQUFjLENBQUM7QUFDM0MsYUFBUyxFQUFFLE9BQU87QUFDbEIsU0FBSyxFQUFFLGdDQUFnQztBQUN2QyxlQUFXLEVBQUUscUdBQXFHO0dBQ25IO0FBQ0QsYUFBVyxFQUFFO0FBQ1gsUUFBSSxFQUFFLFFBQVE7QUFDZCxhQUFTLEVBQUUsRUFBRTtBQUNiLFNBQUssRUFBRSx3QkFBd0I7QUFDL0IsZUFBVyxFQUFFLGdEQUFnRDtHQUM5RDtBQUNELGtCQUFnQixFQUFFO0FBQ2hCLFFBQUksRUFBRSxTQUFTO0FBQ2YsYUFBUyxFQUFFLEtBQUs7QUFDaEIsU0FBSyxFQUFFLHNCQUFzQjtBQUM3QixlQUFXLEVBQUUsbURBQW1EO0dBQ2pFO0NBQ0YsQ0FBQTs7OztBQUVNLFNBQVMsUUFBUSxDQUFDLEtBQUssRUFBRTtBQUM5QixNQUFJLENBQUMsWUFBWSxHQUFHLElBQUksQ0FBQyxTQUFTLENBQUMsU0FBUyxDQUFDLE9BQU8sQ0FBQyxDQUFDO0FBQ3RELE1BQUksQ0FBQyxRQUFRLENBQUMsNEJBQTRCLENBQUMsbUJBQW1CLENBQUMsQ0FBQztDQUNqRTs7QUFFTSxTQUFTLFVBQVUsR0FBRztBQUMzQixNQUFJLENBQUMsWUFBWSxDQUFDLE9BQU8sRUFBRSxDQUFDO0NBQzdCOzs7QUFHRCxJQUFNLGFBQWEsR0FBRyxJQUFJLEdBQUcsQ0FBQyxDQUFDLE1BQU0sQ0FBQyxDQUFDLENBQUM7O0FBRXhDLFNBQVMsT0FBTyxDQUFDLFNBQVMsRUFBRTtBQUMxQixNQUFJLElBQUksS0FBSyxJQUFJLEVBQUU7QUFDakIsUUFBSSxHQUFHLE9BQU8sQ0FBQyxNQUFNLENBQUMsQ0FBQztHQUN4Qjs7QUFFRCxNQUFJLFlBQVksR0FBRyxJQUFJLENBQUMsT0FBTyxDQUFDLFNBQVMsQ0FBQyxDQUFDLFdBQVcsRUFBRSxDQUFBO0FBQ3hELE1BQUksYUFBYSxDQUFDLEdBQUcsQ0FBQyxZQUFZLENBQUMsRUFBRTtBQUNuQyxRQUFJLGFBQWEsS0FBSyxJQUFJLEVBQUU7QUFDMUIsbUJBQWEsR0FBRyxPQUFPLENBQUMsbUJBQW1CLENBQUMsQ0FBQztLQUM5QztBQUNELFdBQU8sSUFBSSxhQUFhLENBQUMsU0FBUyxDQUFDLENBQUM7R0FDckM7Q0FDRjs7QUFFRCxTQUFTLG1CQUFtQixHQUFHO0FBQzdCLE1BQUksZ0JBQWdCLEdBQUcsT0FBTyxDQUFDLHVCQUF1QixDQUFDLENBQUM7QUFDeEQsTUFBSSxnQkFBZ0IsRUFBRSxDQUFDO0FBQ3ZCLE1BQUksZUFBZSxHQUFHLE9BQU8sQ0FBQyxzQkFBc0IsQ0FBQyxDQUFDO0FBQ3RELE1BQUksZUFBZSxFQUFFLENBQUM7Q0FDdkI7O0FBRU0sU0FBUyxXQUFXLENBQUMsSUFBd0MsRUFBRTtNQUF6QyxRQUFRLEdBQVQsSUFBd0MsQ0FBdkMsUUFBUTtNQUFFLEtBQUssR0FBaEIsSUFBd0MsQ0FBN0IsS0FBSztNQUFFLFNBQVMsR0FBM0IsSUFBd0MsQ0FBdEIsU0FBUztNQUFFLFVBQVUsR0FBdkMsSUFBd0MsQ0FBWCxVQUFVOztBQUNqRSxNQUFJLE9BQU8sQ0FBQyxTQUFTLENBQUMsQ0FBQyxVQUFVLENBQUMsUUFBUSxDQUFDLEVBQUU7QUFDM0MsUUFBSSxhQUFhLEtBQUssSUFBSSxFQUFFO0FBQzFCLG1CQUFhLEdBQUcsT0FBTyxDQUFDLG1CQUFtQixDQUFDLENBQUM7S0FDOUM7QUFDRCxXQUFPLElBQUksYUFBYSxDQUFDLFFBQVEsRUFBRSxLQUFLLEVBQUUsU0FBUyxFQUFFLFVBQVUsQ0FBQyxDQUFDO0dBQ2xFLE1BQU07QUFDTCxXQUFPLENBQUMsSUFBSSxDQUFDLDRGQUE0RixDQUFDLENBQUM7R0FDNUc7Q0FDRjs7QUFFRCxJQUFJLFVBQVUsQ0FBQyxJQUFJLENBQUMsVUFBVSxFQUFFLENBQUMsR0FBRyxHQUFHLEVBQUU7QUFDdkMsTUFBSSxDQUFDLGFBQWEsQ0FBQyxHQUFHLENBQUM7QUFDckIsVUFBTSxFQUFFLHVCQUF1QjtBQUMvQixpQkFBYSxFQUFFLFdBQVc7R0FDM0IsQ0FBQyxDQUFDO0NBQ0oiLCJmaWxlIjoiL2hvbWUva2V5Ly5hdG9tL3BhY2thZ2VzL3BkZi12aWV3L2xpYi9wZGYtZWRpdG9yLmpzIiwic291cmNlc0NvbnRlbnQiOlsiXCJ1c2UgYmFiZWxcIjtcblxudmFyIHBhdGggPSBudWxsO1xudmFyIFBkZkVkaXRvclZpZXcgPSBudWxsO1xuXG5leHBvcnQgY29uc3QgY29uZmlnID0ge1xuICByZXZlcnNlU3luY0JlaGF2aW91cjoge1xuICAgIHR5cGU6IFwic3RyaW5nXCIsXG4gICAgZW51bTogWydEaXNhYmxlZCcsICdDbGljaycsICdEb3VibGUgY2xpY2snXSxcbiAgICAnZGVmYXVsdCc6ICdDbGljaycsXG4gICAgdGl0bGU6IFwiU3luY1RlWCBSZXZlcnNlIHN5bmMgYmVoYXZpb3VyXCIsXG4gICAgZGVzY3JpcHRpb246IFwiU3BlY2lmeSB0aGUgYWN0aW9uIG9uIHRoZSBQREYgZ2VuZXJhdGVkIHdpdGggdGhlIGAtLXN5bmN0ZXg9MWAgb3B0aW9uIHRoYXQgdGFrZXMgeW91IHRvIHRoZSBzb3VyY2UuXCJcbiAgfSxcbiAgc3luY1RlWFBhdGg6IHtcbiAgICB0eXBlOiBcInN0cmluZ1wiLFxuICAgICdkZWZhdWx0JzogXCJcIixcbiAgICB0aXRsZTogXCJQYXRoIHRvIHN5bmN0ZXggYmluYXJ5XCIsXG4gICAgZGVzY3JpcHRpb246IFwiSWYgbm90IHNwZWNpZmllZCwgbG9vayBmb3IgYHN5bmN0ZXhgIGluIGBQQVRIYFwiXG4gIH0sXG4gIGZpdFRvV2lkdGhPbk9wZW46IHtcbiAgICB0eXBlOiBcImJvb2xlYW5cIixcbiAgICAnZGVmYXVsdCc6IGZhbHNlLFxuICAgIHRpdGxlOiBcIkZpdCB0byB3aWR0aCBvbiBvcGVuXCIsXG4gICAgZGVzY3JpcHRpb246IFwiV2hlbiBvcGVuaW5nIGEgZG9jdW1lbnQsIGZpdCBpdCB0byB0aGUgcGFuZSB3aWR0aFwiXG4gIH1cbn1cblxuZXhwb3J0IGZ1bmN0aW9uIGFjdGl2YXRlKHN0YXRlKSB7XG4gIHRoaXMuc3Vic2NyaXB0aW9uID0gYXRvbS53b3Jrc3BhY2UuYWRkT3BlbmVyKG9wZW5VcmkpO1xuICBhdG9tLnBhY2thZ2VzLm9uRGlkQWN0aXZhdGVJbml0aWFsUGFja2FnZXMoY3JlYXRlUGRmU3RhdHVzVmlldyk7XG59XG5cbmV4cG9ydCBmdW5jdGlvbiBkZWFjdGl2YXRlKCkge1xuICB0aGlzLnN1YnNjcmlwdGlvbi5kaXNwb3NlKCk7XG59XG5cbi8vIEZpbGVzIHdpdGggdGhlc2UgZXh0ZW5zaW9ucyB3aWxsIGJlIG9wZW5lZCBhcyBQREZzXG5jb25zdCBwZGZFeHRlbnNpb25zID0gbmV3IFNldChbJy5wZGYnXSk7XG5cbmZ1bmN0aW9uIG9wZW5VcmkodXJpVG9PcGVuKSB7XG4gIGlmIChwYXRoID09PSBudWxsKSB7XG4gICAgcGF0aCA9IHJlcXVpcmUoJ3BhdGgnKTtcbiAgfVxuXG4gIGxldCB1cmlFeHRlbnNpb24gPSBwYXRoLmV4dG5hbWUodXJpVG9PcGVuKS50b0xvd2VyQ2FzZSgpXG4gIGlmIChwZGZFeHRlbnNpb25zLmhhcyh1cmlFeHRlbnNpb24pKSB7XG4gICAgaWYgKFBkZkVkaXRvclZpZXcgPT09IG51bGwpIHtcbiAgICAgIFBkZkVkaXRvclZpZXcgPSByZXF1aXJlKCcuL3BkZi1lZGl0b3ItdmlldycpO1xuICAgIH1cbiAgICByZXR1cm4gbmV3IFBkZkVkaXRvclZpZXcodXJpVG9PcGVuKTtcbiAgfVxufVxuXG5mdW5jdGlvbiBjcmVhdGVQZGZTdGF0dXNWaWV3KCkge1xuICBsZXQgUGRmU3RhdHVzQmFyVmlldyA9IHJlcXVpcmUoJy4vcGRmLXN0YXR1cy1iYXItdmlldycpO1xuICBuZXcgUGRmU3RhdHVzQmFyVmlldygpO1xuICBsZXQgUGRmR29Ub1BhZ2VWaWV3ID0gcmVxdWlyZSgnLi9wZGYtZ290by1wYWdlLXZpZXcnKTtcbiAgbmV3IFBkZkdvVG9QYWdlVmlldygpO1xufVxuXG5leHBvcnQgZnVuY3Rpb24gZGVzZXJpYWxpemUoe2ZpbGVQYXRoLCBzY2FsZSwgc2Nyb2xsVG9wLCBzY3JvbGxMZWZ0fSkge1xuICBpZiAocmVxdWlyZSgnZnMtcGx1cycpLmlzRmlsZVN5bmMoZmlsZVBhdGgpKSB7XG4gICAgaWYgKFBkZkVkaXRvclZpZXcgPT09IG51bGwpIHtcbiAgICAgIFBkZkVkaXRvclZpZXcgPSByZXF1aXJlKCcuL3BkZi1lZGl0b3ItdmlldycpO1xuICAgIH1cbiAgICByZXR1cm4gbmV3IFBkZkVkaXRvclZpZXcoZmlsZVBhdGgsIHNjYWxlLCBzY3JvbGxUb3AsIHNjcm9sbExlZnQpO1xuICB9IGVsc2Uge1xuICAgIGNvbnNvbGUud2FybihcIkNvdWxkIG5vdCBkZXNlcmlhbGl6ZSBQREYgZWRpdG9yIGZvciBwYXRoICcje2ZpbGVQYXRofScgYmVjYXVzZSB0aGF0IGZpbGUgbm8gbG9uZ2VyIGV4aXN0c1wiKTtcbiAgfVxufVxuXG5pZiAocGFyc2VGbG9hdChhdG9tLmdldFZlcnNpb24oKSkgPCAxLjcpIHtcbiAgYXRvbS5kZXNlcmlhbGl6ZXJzLmFkZCh7XG4gICAgXCJuYW1lXCI6IFwiUGRmRWRpdG9yRGVzZXJpYWxpemVyXCIsXG4gICAgXCJkZXNlcmlhbGl6ZVwiOiBkZXNlcmlhbGl6ZVxuICB9KTtcbn1cbiJdfQ==
+//# sourceURL=/home/key/.atom/packages/pdf-view/lib/pdf-editor.js

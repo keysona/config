@@ -1,0 +1,34 @@
+{
+  "name": "dracula-theme",
+  "theme": "syntax",
+  "version": "1.2.6",
+  "description": "A dark theme for Atom",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dracula/atom.git"
+  },
+  "license": "MIT",
+  "engines": {
+    "atom": ">0.50.0"
+  },
+  "readme": "# Dracula for [Atom](https://atom.io)\n\n> A dark theme for [Atom](https://atom.io).\n\n![Screenshot](https://draculatheme.com/assets/img/screenshots/atom.png)\n\n## Install\n\nAll instructions can be found at [draculatheme.com/atom](https://draculatheme.com/atom).\n\n## License\n\n[MIT License](./LICENSE)\n",
+  "readmeFilename": "README.md",
+  "bugs": {
+    "url": "https://github.com/dracula/atom/issues"
+  },
+  "homepage": "https://github.com/dracula/atom#readme",
+  "_id": "dracula-theme@1.2.6",
+  "_shasum": "89bb6175819a115910b22e13adccf1e581731872",
+  "_resolved": "file:../d-116425-30317-yl8lve/package.tgz",
+  "_from": "../d-116425-30317-yl8lve/package.tgz",
+  "_atomModuleCache": {
+    "version": 1,
+    "dependencies": [],
+    "extensions": {
+      ".json": [
+        "package.json"
+      ]
+    },
+    "folders": []
+  }
+}
