@@ -50,6 +50,8 @@ DISABLE_AUTO_UPDATE="true"
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
+#plugins=(git autojump cp d python)
+plugins=(git textmate cd d python)
 
 # User configuration
 
@@ -83,7 +85,10 @@ source ~/.profile
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
-plugins=(git autojump cp d python)
 
 [[ -s /home/key/.autojump/etc/profile.d/autojump.sh ]] && source /home/key/.autojump/etc/profile.d/autojump.sh
 autoload -U compinit && compinit -u
+
+
+# show zsh history
+alias his="fc -fl 1"
