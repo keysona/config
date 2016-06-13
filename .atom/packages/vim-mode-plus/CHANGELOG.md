@@ -1,3 +1,17 @@
+# 0.44.1:
+- Fix: `ctrl-y`, `ctrl-e`, throw error, and not worked properly, latent bug of vmp become obvious from Atom 1.9.0-beta0
+- Improve: Now `3d2w` delete 6(3x2) words instead of 32 words in previous version. #289
+
+# 0.44.0:
+- New: Improve % motion, support HTML Tag, and AngleBracket #285
+- Fix: `Uncaught TypeError: history.getChangesSinceCheckpoint is not a function` #288
+
+# 0.43.0:
+- Fix: Don't throw error when `vr` in empty buffer by avoiding odd state(=visual-mode but selection is empty) #282
+- Improve: Refactoring
+- New: Operator.PascalCase by @raroman, default keymap is `gC`. pascase-case works like `pascal-case to PascalCase`.
+- Improve: `D` in visual-mode should delete whole line #284
+
 # 0.42.0: Big release not for feature, but because default setting change.
 - Change Default: `setCursorToStartOfChangeOnUndoRedo` is now enabled by default.
 - Change Default: `flashOnUndoRedo` is now enabled by default.

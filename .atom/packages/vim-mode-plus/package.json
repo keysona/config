@@ -1,7 +1,7 @@
 {
   "name": "vim-mode-plus",
   "main": "./lib/main",
-  "version": "0.42.0",
+  "version": "0.44.1",
   "description": "vim-mode improved",
   "license": "MIT",
   "private": true,
@@ -49,10 +49,10 @@
     "url": "https://github.com/t9md/atom-vim-mode-plus/issues"
   },
   "homepage": "https://github.com/t9md/atom-vim-mode-plus#readme",
-  "_id": "vim-mode-plus@0.42.0",
-  "_shasum": "5a172331cbb167c67b6c9a0ec9fb5df87834212f",
-  "_resolved": "file:../d-116420-11246-sfjxwv/package.tgz",
-  "_from": "../d-116420-11246-sfjxwv/package.tgz",
+  "_id": "vim-mode-plus@0.44.1",
+  "_shasum": "45177c4d68efb55638a8e923ad3490ae6fd9b610",
+  "_resolved": "file:../d-116513-23025-1ika3gm/package.tgz",
+  "_from": "../d-116513-23025-1ika3gm/package.tgz",
   "_atomModuleCache": {
     "version": 1,
     "dependencies": [
@@ -143,7 +143,7 @@
       },
       {
         "name": "fs-plus",
-        "version": "2.8.2",
+        "version": "2.9.1",
         "path": "node_modules/fs-plus/lib/fs-plus.js"
       },
       {
