@@ -89,7 +89,7 @@ alias screenarea='gnome-screenshot -a'
 
 alias gc='nohup google-chrome -no_proxy >/var/log/chrome.log 2>&1 &'
 
-alias down='cd ~/Downloads;touch ~/Downloads/aria2.session;nohup aria2c --enable-rpc --rpc-listen-all --rpc-allow-origin-all --file-allocation=none -x3 -s3 -j3 -c --save-session=aria2.session -i ~/Downloads/aria2.session &'
+alias down='cd ~/share;touch ~/share/aria2.session;nohup aria2c --enable-rpc --rpc-listen-all --rpc-allow-origin-all --file-allocation=none -x3 -s3 -j3 -c --save-session=aria2.session -i ~/share/aria2.session &'
 
 
 #http_proxy
@@ -155,5 +155,6 @@ export PATH=$SCALA_HOME/bin:$PATH
 # ll alias
 alias ll="ls -alh"
 
-# http_proxy
+#http_proxy
 #export http_proxy="http://127.0.0.1:9527"
+unset http_proxy
